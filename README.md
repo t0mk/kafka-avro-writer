@@ -20,7 +20,7 @@ The consumer container is configured via envrionment variables. There is
 - `topic`: which topic should the consumer subscribe to.
 - `topic_schema_path`: Avro schema (avsc file) of the message for the topic. Examples are in resources dir in this repo.
 - `rotate_interval`: how often should the avro files be rotated. In pytimeparse format (https://github.com/wroberts/pytimeparse).
-- `librdkafka_config`: string containing yaml dict for config of librdkafka broker. It should at least contain keys for `bootstrap.servers` and `schema.registry.url`. All the possible keys are documented at https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md.
+- `librdkafka_config`: string containing yaml dict for config of librdkafka consumer. It should at least contain keys for `bootstrap.servers` (list of broker specs like hostname:port) and `schema.registry.url`. All the possible keys are documented at https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md.
 
 Example configuration is in [compose-example.yml](compose-example.yml) in this repo. It defines 2 services which dump Avro messages from localhost broker to files in specified directory. The Avro files are rotated in specified intervals. All the files with `.avro` suffices can be copied to S3, and then loaded to Redshift as described below.
 
