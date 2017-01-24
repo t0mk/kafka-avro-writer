@@ -40,7 +40,7 @@ To load Avro data to Redshift, we first need to get psql console to Redshift clu
 psql -h aaa.cq5qghejvqym.us-west-2.Redshift.amazonaws.com -U tomk -p 5439 dev
 ```
 
-If this is the first time uploading the data to the cluster, we first need to create the tables in Redshift. According to the Request schema in [resources/request.avsc](resources/request.avsc), the create SQL can be like [resources/Request.sql](resources/Request.sql) in this repo.
+If this is the first time uploading the data to the cluster, we first need to create the tables in Redshift. According to the Request schema in [resources/Request.avsc](resources/request.avsc), the create SQL can be like [resources/Request.sql](resources/Request.sql) in this repo.
 
 If the field names in your schema contain upper-case letters, we need to supply JSONPaths file to tell Redshift which field is which column. The order in the JSONPaths list must be the same as the order in the columns in the database table.
 For illustration, you can see [resources/Request.avropath](resources/Request.avropath) in this repo.
