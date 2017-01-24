@@ -1,0 +1,9 @@
+{
+    "jsonpaths": [
+        "$['responseId']",
+        "$['requestId']",
+        "$['bytesSize']",
+        "$['occurredAt']"
+    ]
+}
+

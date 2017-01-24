@@ -1,0 +1,6 @@
+{
+  "type" : "enum",
+  "name" : "TrafficType",
+  "namespace" : "waldo.recruiting",
+  "symbols" : [ "REAL", "TEST" ]
+}

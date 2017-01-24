@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+
+import yaml
+import confluent_kafka
+import confluent_kafka.avro
+import fastavro
+import fastavro.writer
+import pytimeparse
+
+import datetime
+import os
+import sys
+import uuid
+import signal
+
+
+def prettytime(dt=None):
+    if dt is None:
+        dt =  datetime.datetime.now()
+    return dt.strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def timestamp_file(oldname):
+    newname = oldname[:-3] + prettytime() + ".avro"
+    print("mv %s %s" % (oldname, newname))
+    os.rename(oldname, newname)
+
+
+FATAL_ERRORS = ['_ALL_BROKERS_DOWN']
+
+
+class AvroConsumerWriter(object):
+
+    def __init__(self):
+        self.writer = None
+        self.consumer = None
+        self.out_dir = os.environ['out_dir']
+        self.topic = os.environ['topic']
+        self.topic_schema = yaml.load(
+            open(os.environ['topic_schema_path']).read())
+        assert(type(self.topic) is str)
+        assert(type(self.topic_schema) is dict)
+        self.consumer_config = yaml.load(os.environ['librdkafka_config'])
+        self.rotate_interval_sec = pytimeparse.timeparse.timeparse(
+                                       os.environ['rotate_interval'])
+
+        print('consumer configuration', self.consumer_config, flush=True)
+        print('topic', self.topic, flush=True)
+        print('topic schema', self.topic_schema, flush=True)
+        self.consumer_config['error_cb'] = self.error_callback
+        _signals = [signal.SIGINT, signal.SIGTERM]
+        self.orig_handlers = {}
+        for s in _signals:
+            self.orig_handlers[s] = signal.getsignal(s)
+            signal.signal(s, self.SIGINT_SIGTERM_handler)
+
+    def SIGINT_SIGTERM_handler(self, signum, frame):
+        print("Terminating signal caught", flush=True)
+        self.release()
+        sys.exit(0)
+
+    def run(self):
+        self.consumer = confluent_kafka.avro.AvroConsumer(
+            config=self.consumer_config)
+        self.consumer.subscribe([self.topic])
+
+        interval_offset = datetime.timedelta(seconds=self.rotate_interval_sec)
+        next_rollover = datetime.datetime.now() + interval_offset
+        running = True
+        while running:
+            try:
+                msg = self.consumer.poll(1)
+                now = datetime.datetime.now()
+                if now > next_rollover:
+                    print(prettytime(now), "rolling over", flush=True)
+                    if self.writer:
+                        self.finalize_batch()
+                    next_rollover = datetime.datetime.now() + interval_offset
+                if msg:
+                    if not msg.error():
+                        if self.writer:
+                            self.writer.write(msg.value())
+                        else:
+                            tmp_file_name = self.get_tmp_file_name()
+                            self.writer = self.create_writer(tmp_file_name)
+                            print("opened new writer in", tmp_file_name,
+                                   flush=True)
+            except Exception as e:
+                print("Exception in run():", e)
+                running = False
+        self.release()
+
+    def release(self):
+        print("Releasing writer and consumer.", flush=True)
+        if self.writer:
+            self.finalize_batch()
+        if self.consumer:
+            self.consumer.close()
+
+    def get_tmp_file_name(self):
+        return os.path.join(self.out_dir, self.topic + "."
+                            + uuid.uuid4().hex + ".tmp")
+
+    def create_writer(self, file_name):
+        file_handle = open(file_name, 'wb')
+        writer = fastavro.writer.Writer(file_handle, self.topic_schema)
+        return writer
+    
+    def finalize_batch(self):
+        oldname = self.writer.fo.name
+        print("flushing and closing Avro writer for file %s" % oldname,
+               flush=True)
+        self.writer.flush()
+        self.writer.fo.close()
+        self.writer = None
+        timestamp_file(oldname)
+
+    def error_callback(self,a):
+        print("librdkafka Error", a, flush=True)
+        if a.name() in FATAL_ERRORS:
+            print('Error', a.name(), 'is fatal', flush=True)
+            self.release()
+            sys.exit(0)
+
+
+if __name__ == '__main__':
+    c = AvroConsumerWriter()
+    c.run()

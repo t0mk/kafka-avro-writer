@@ -1,0 +1,13 @@
+{
+    "jsonpaths": [
+        "$['requestId']",
+        "$['queryString']",
+        "$['host']",
+        "$['path']",
+        "$['bytesSize']",
+        "$['occurredAt']",
+        "$['headers']",
+        "$['method']",
+        "$['trafficType']"
+    ]
+}

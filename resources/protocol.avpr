@@ -1,0 +1,64 @@
+{
+  "protocol" : "Recruiting",
+  "namespace" : "waldo.recruiting",
+  "types" : [ {
+    "type" : "enum",
+    "name" : "TrafficType",
+    "symbols" : [ "REAL", "TEST" ]
+  }, {
+    "type" : "enum",
+    "name" : "RequestMethod",
+    "symbols" : [ "GET", "POST" ]
+  }, {
+    "type" : "record",
+    "name" : "Request",
+    "fields" : [ {
+      "name" : "requestId",
+      "type" : "string"
+    }, {
+      "name" : "headers",
+      "type" : {
+        "type" : "map",
+        "values" : "string"
+      }
+    }, {
+      "name" : "queryString",
+      "type" : "string"
+    }, {
+      "name" : "host",
+      "type" : "string"
+    }, {
+      "name" : "path",
+      "type" : "string"
+    }, {
+      "name" : "bytesSize",
+      "type" : "long"
+    }, {
+      "name" : "trafficType",
+      "type" : "TrafficType"
+    }, {
+      "name" : "method",
+      "type" : "RequestMethod"
+    }, {
+      "name" : "occurredAt",
+      "type" : "long"
+    } ]
+  }, {
+    "type" : "record",
+    "name" : "Response",
+    "fields" : [ {
+      "name" : "responseId",
+      "type" : "string"
+    }, {
+      "name" : "requestId",
+      "type" : "string"
+    }, {
+      "name" : "bytesSize",
+      "type" : "long"
+    }, {
+      "name" : "occurredAt",
+      "type" : "long"
+    } ]
+  } ],
+  "messages" : { }
+}

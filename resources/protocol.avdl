@@ -1,0 +1,31 @@
+@namespace("waldo.recruiting")
+protocol Recruiting {
+  enum TrafficType {
+    REAL,
+    TEST
+  }
+
+  enum RequestMethod {
+    GET,
+    POST
+  }
+
+  record Request {
+    string requestId;
+    map<string> headers;
+    string queryString;
+    string host;
+    string path;
+    long bytesSize;
+    TrafficType trafficType;
+    RequestMethod method;
+    long occurredAt; // Millisecond timestamp
+  }
+
+  record Response {
+    string responseId;
+    string requestId;
+    long bytesSize;
+    long occurredAt; // Millisecond timestamp
+  }
+}

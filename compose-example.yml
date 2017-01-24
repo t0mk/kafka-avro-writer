@@ -1,0 +1,46 @@
+version: '2'
+services:
+  request_consumer:
+    image: t0mk/kafka-avro-writer
+    # if you want to access broker and schema on your localhost, you can
+    # use host network mode
+    network_mode: host
+
+    # /data is a volume passed as out_dir in librdkafka_config envvar
+    volumes:
+      - /home/tomk/v2:/data
+
+    environment:
+      PYTHONBUFFERED: '0'
+      out_dir: /data
+      topic: a_request_topic_11
+      topic_schema_path: resources/Request.avsc
+      librdkafka_config: |
+        bootstrap.servers: localhost:9092
+        schema.registry.url: http://localhost:8081
+        group.id: group1
+      rotate_interval: 1m
+
+  response_consumer:
+    image: t0mk/kafka-avro-writer
+    # if you want to access broker and schema on your localhost, you can
+    # use host network mode
+    network_mode: host
+
+    # /data is a volume passed as out_dir in librdkafka_config envvar
+    volumes:
+      - /home/tomk/v2:/data
+
+    environment:
+      PYTHONBUFFERED: '0'
+      out_dir: /data
+      topic: a_response_topic_11
+      topic_schema_path: resources/Response.avsc
+      librdkafka_config: |
+        bootstrap.servers: localhost:9092
+        schema.registry.url: http://localhost:8081
+        group.id: group1
+      rotate_interval: 1m
+
+
+

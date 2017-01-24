@@ -1,0 +1,6 @@
+{
+  "type" : "enum",
+  "name" : "RequestMethod",
+  "namespace" : "waldo.recruiting",
+  "symbols" : [ "GET", "POST" ]
+}

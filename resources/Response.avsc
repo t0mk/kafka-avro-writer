@@ -1,0 +1,18 @@
+{
+  "type" : "record",
+  "name" : "Response",
+  "namespace" : "waldo.recruiting",
+  "fields" : [ {
+    "name" : "responseId",
+    "type" : "string"
+  }, {
+    "name" : "requestId",
+    "type" : "string"
+  }, {
+    "name" : "bytesSize",
+    "type" : "long"
+  }, {
+    "name" : "occurredAt",
+    "type" : "long"
+  } ]
+}

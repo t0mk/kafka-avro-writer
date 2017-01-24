@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+
+import yaml
+import argh
+import confluent_kafka
+import confluent_kafka.avro
+
+import uuid
+import random
+import time
+import string
+
+
+def rand_string(length_interval=None):
+    if length_interval:
+        n = round(random.uniform(*length_interval))
+    else:
+        n = 32
+    return "".join([random.choice(string.ascii_lowercase) for _ in range(n)])
+
+
+# https://github.com/galkan/tools/blob/master/others/programming/python/random-http-headers-urllib.py
+
+def get_headers():
+    _uas = [
+            'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11',
+            'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:17.0) Gecko/20100101 Firefox/17.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/536.26.17 (KHTML, like Gecko) Version/6.0.2 Safari/536.26.17',
+            'Mozilla/5.0 (Linux; U; Android 2.2; fr-fr; Desire_A8181 Build/FRF91) App3leWebKit/53.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1',
+            'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; FunWebProducts; .NET CLR 1.1.4322; PeoplePal 6.2)',
+            'Mozilla/5.0 (Windows NT 5.1; rv:13.0) Gecko/20100101 Firefox/13.0.1',
+            'Opera/9.80 (Windows NT 5.1; U; en) Presto/2.10.289 Version/12.01',
+            'Mozilla/5.0 (Windows NT 5.1; rv:5.0.1) Gecko/20100101 Firefox/5.0.1',
+            'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1) ; .NET CLR 3.5.30729)'
+            ]
+
+    _headers = {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'close',
+            'DNT': '1'
+            }
+
+    _headers['User-Agent'] = random.choice(_uas)
+    return _headers
+
+
+def generate_request():
+    return {
+         'queryString': rand_string((32,100)),
+         'host': rand_string((16,32)),
+         'path': rand_string((32,100)),
+         'bytesSize': 1337,
+         'requestId': str(uuid.uuid4()),
+         'headers': get_headers(),
+         'occurredAt': round(time.time() * 1000),
+         'trafficType': random.choice(['REAL','TEST']),
+         'method': random.choice(['GET','POST'])
+    }
+
+def generate_response():
+    return {
+         'requestId': str(uuid.uuid4()),
+         'responseId': str(uuid.uuid4()),
+         'bytesSize': 1337,
+         'occurredAt': round(time.time() * 1000),
+    }
+
+
+DUMMY_GENERATORS = {
+    "waldo.recruiting.Response" : generate_response,
+    "waldo.recruiting.Request" : generate_request
+}
+
+
+DEFAULT_PRODUCER_PARAMS = """
+    bootstrap.servers: localhost:9092
+    schema.registry.url: http://localhost:8081
+"""
+
+def produce(topic, topic_schema_path, producer_params=DEFAULT_PRODUCER_PARAMS):
+    producer_kwargs = yaml.load(producer_params)
+    schema = confluent_kafka.avro.load(topic_schema_path)
+    producer = confluent_kafka.avro.AvroProducer(
+            config=producer_kwargs, default_value_schema=schema)
+
+    msg_generator = DUMMY_GENERATORS[schema.namespace + "." + schema.name]
+    print("About to start sending messages")
+    print(producer_kwargs['bootstrap.servers'], topic, schema)
+
+    for i in range(10**10):
+        producer.produce(topic=topic, value=msg_generator())
+        if i % 1024 == 0:
+            producer.flush()
+    producer.flush()
+
+
+if __name__ == '__main__':
+    exposed_methods = [produce]
+    parser = argh.ArghParser()
+    parser.add_commands(exposed_methods)
+    parser.dispatch()
