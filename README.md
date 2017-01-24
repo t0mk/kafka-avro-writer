@@ -1,15 +1,15 @@
 # Kafka consumer of Avro messages
 
-This repo contains resources for Kafka consumer of Avro messages. It subsrcibes to a topic and stores messages to Avro container files. The files can then be copied to S3 and subsequently loaded to Redshift with the COPY command.
+This repo contains resources for Docker container wrapping a Kafka consumer of Avro messages. The consumer subscribes to a topic, and stores messages to Avro container files. The files can then be copied to S3 and subsequently loaded to Redshift with the COPY command.
 
 ## Usage
 
 Before using this tool, you need to:
 
-* Get the Docker image (`docker pull t0mk/kafka-avro-writer`) or build it yourself (`docker build -t t0mk/kafka-avro-writer` ./).
-* Find out your Kafka broker's hostname:port (default is `localhost:9092`), and your registry URL (default is `http://localhost:8081`).
-* Know the topic of the message that you want to store.
-* Have Avro schema of the messages of the topic (something like `resources/Request.avsc`)
+* Get the Docker image (`docker pull t0mk/kafka-avro-writer`) or build it yourself (`docker build -t t0mk/kafka-avro-writer ./`).
+* Find out your Kafka broker's `hostname:port`, and your scheme registry URL.
+* Know the topic of the messages that you want to store.
+* Have Avro schema of the messages of the topic (something like [resources/Request.avsc](resources/Request.avsc))
 * Know your way with simple Docker volumes at least a bit
 
 ### Configuration
