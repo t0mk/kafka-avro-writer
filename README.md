@@ -30,6 +30,12 @@ The two consumer can be run as:
 $ docker compose -f compose-example.yml up
 ```
 
+## Stored files
+
+The tool stores the files as `<topic>.<randomstring>.tmp`. Once every `rotate_interval` and on SIGINT and SIGTERM, the current tmp file is renamed to `<topic>.<randomstring>.<datetime>.avro`.
+
+On SIGKILL or SIGSTOP, there will be orphaned `.tmp` files. These files are most likely valid avro container files, and they also be used in the Redhsift COPY.
+
 ## Loading to Redshift
 
 The Avro container files created by `kafka_avro_writer` can be loaded from S3 to Redshift with the COPY command.
